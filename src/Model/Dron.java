@@ -29,7 +29,7 @@ public class Dron extends ObjetoVolador{
 	}
 	
     public boolean estaFueraDePantalla() {
-        // Hay que ver el tema limites
+
         final float LimIzquierdo = 0f;
         final float LimDerecho  = 800f;
         final float LimSuperior  = 0f;

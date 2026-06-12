@@ -5,7 +5,6 @@ import java.util.List;
 
 public class Escuadron {
 
-    
     private int        dronesRestantes;
     private int        numeroEscuadron;
     private List<Dron> drones;

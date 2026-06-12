@@ -20,9 +20,7 @@ public class Jugador {
 		   this.vidas = Math.max(0, this.vidas + cantidad);
 	}
 	
-	public void SumarPuntaje(int cantidad) {
-		this.vidas = Math.max(0, this.vidas + cantidad);
-	}
+
 	
 	public void sumarPuntos(int cantidad) {
 		this.puntaje = Math.max(0, this.puntaje + cantidad);

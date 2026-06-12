@@ -7,7 +7,7 @@ public class Misil extends ObjetoVolador {
 	
 	//el Constructor para el misil.
 	/*El constructor es modificable para que los valores de altitudDetonacion y velocidadCaida sean alterables en lugar de constantes. 
-	 * Decidan ustedes que yo lo implemento*/
+	*/
 	public Misil(float posicionX, float posicionY) {
         super(posicionX, posicionY);
         this.altitudDetonacion = 50;   
@@ -21,7 +21,7 @@ public class Misil extends ObjetoVolador {
 	public boolean evaluarDetonacion(Avion a) {
         boolean altitudAlcanzada = getPosicionY() >= altitudDetonacion;
         double  distancia = calcularDistanciaAlAvion(a);
-        //Decidí el radio de explosión en base a las vibes del día (Desp definimos bien que radio ponerle)
+
         final double RadioExplosion = 30.0;
  
         return altitudAlcanzada || distancia <= RadioExplosion;
