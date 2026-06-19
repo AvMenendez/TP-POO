@@ -1,17 +1,15 @@
 package Model;
-
 import java.util.ArrayList;
 import java.util.List;
-
-
 public class Juego {
 
+    // Atributos privados
     private Jugador     jugadorActual;
     private Nivel       nivelActual;
-    private Escuadron   escuadronActual;       // Reemplaza dronesActivos + dronesRestantesEscuadron
+    private Escuadron   escuadronActual;
     private List<Misil> misilesActivos;
 
-
+    
     public Juego(Jugador jugadorActual, Nivel nivelActual, Escuadron escuadronActual) {
         this.jugadorActual   = jugadorActual;
         this.nivelActual     = nivelActual;
@@ -30,43 +28,28 @@ public class Juego {
     public void actualizarJuego() {
         Avion avion = jugadorActual.getAvionActivo();
 
-        // --- Actualizar drones activos ---
-        List<Dron> dronesAEliminar = new ArrayList<>();
-        for (Dron dron : escuadronActual.getDrones()) {
-            dron.desplazarse();
+        // Escuadron mueve sus drones y devuelve los misiles que dispararon
+        List<Misil> misilesNuevos = escuadronActual.actualizar();
+        misilesActivos.addAll(misilesNuevos);
 
-            if (dron.estaFueraDePantalla()) {
-                dronesAEliminar.add(dron);
-                continue;
-            }
-
-            Misil misil = dron.evaluarDisparo();
-            if (misil != null) {
-                misilesActivos.add(misil);
-            }
-        }
-        for (Dron dron : dronesAEliminar) {
-            escuadronActual.eliminarDron(dron);
-        }
-
-        // --- Actualizar misiles activos ---
+        // Actualizar misiles activos en pantalla
         List<Misil> misilesAEliminar = new ArrayList<>();
         for (Misil misil : misilesActivos) {
             misil.descender();
 
             if (misil.evaluarDetonacion(avion)) {
-                avion.recibirDanio(10); // Cada impacto quita 10%; ajustable.
+                avion.recibirDanio(10); // Cada impacto quita 10%
                 misilesAEliminar.add(misil);
             }
         }
         misilesActivos.removeAll(misilesAEliminar);
 
-      // --- Spawn y victoria ---
+        // Spawn y verificación de victoria
         controlarSpawnDrones();
         verificarCondicionVictoria();
     }
 
-    
+   
     public void controlarSpawnDrones() {
         if (escuadronActual.getDrones().isEmpty() && !escuadronActual.estaDestruido()) {
             double multiplicador     = nivelActual.getMultiplicadorDificultad();
@@ -80,6 +63,7 @@ public class Juego {
         }
     }
 
+   
     public void verificarCondicionVictoria() {
         if (!jugadorActual.estaVivo()) {
             System.out.println("Game Over. Puntaje final: " + jugadorActual.getPuntaje());
@@ -91,16 +75,15 @@ public class Juego {
             jugadorActual.sumarPuntos(100);
             nivelActual.avanzarNivel();
 
-            // Crear nuevo escuadrón con más drones según el nivel alcanzado
             int nuevosDrones = nivelActual.getNumeroNivel() * 3;
             escuadronActual  = new Escuadron(nivelActual.getNumeroNivel(), nuevosDrones);
             controlarSpawnDrones();
         }
     }
 
-    
+    // -------------------------------------------------------------------------
     // Getters
-    
+    // -------------------------------------------------------------------------
 
     public Jugador getJugadorActual() {
         return jugadorActual;
@@ -118,4 +101,4 @@ public class Juego {
         return misilesActivos;
     }
 
-  }
+}
