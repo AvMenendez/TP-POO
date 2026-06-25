@@ -5,12 +5,25 @@ import java.util.List;
 public class Juego {
 
     public  static final int TAM_ESCUADRON  = 10;   // unidades por escuadrón (consigna)
+    public  static final int NIVEL_MAX      = 15;   // tope de niveles: al superarlo, se gana el juego
     private static final int DRONES_ACTIVOS = 4;    // máximo de drones simultáneos en pantalla
 
-    // Velocidades base (en metros por tick); escalan con el multiplicador del nivel.
-    private static final double DRON_VEL_BASE       = 16.0;
-    private static final double MISIL_VEL_BASE      = 24.0;
-    private static final double FREC_DISPARO_BASE   = 0.01;
+    // Distancia mínima (m) que debe haber avanzado el último dron antes de que entre el
+    // siguiente por ese mismo extremo. Igual a ANCHO_M / DRONES_ACTIVOS para que los 4
+    // queden REPARTIDOS a lo ancho de la pantalla (no amontonados en "dúos" junto a los
+    // bordes, lo que dejaba grandes zonas sin drones ni misiles).
+    private static final double SEPARACION_SPAWN = Config.ANCHO_M / DRONES_ACTIVOS;
+
+    // Pequeña espera ALEATORIA (en ticks) que se suma al espaciado por posición, para que
+    // el instante exacto de entrada no sea perfectamente regular (a 30 ms/tick: ~0,3–1,2 s).
+    private static final int ESPERA_SPAWN_MIN = 10;
+    private static final int ESPERA_SPAWN_MAX = 40;
+
+    // Velocidades base (en metros por tick) del nivel 1; escalan +15% por nivel. Son
+    // valores propios (la consigna fija el escalado por nivel, no el arranque).
+    private static final double DRON_VEL_BASE       = 22.0;
+    private static final double MISIL_VEL_BASE      = 32.0;
+    private static final double FREC_DISPARO_BASE   = 0.04;
 
     // Puntaje
     private static final int PUNTOS_NIVEL = 300;   // por superar un nivel
@@ -32,6 +45,7 @@ public class Juego {
     private List<Misil>     misilesActivos;
     private List<Explosion> explosionesActivas;
     private EstadoJuego     estado;
+    private int             ticksParaProximoSpawn; // cuenta regresiva hasta poder aparecer el próximo dron
 
 
     // Crea la partida con el jugador, el nivel y el escuadrón iniciales.
@@ -65,10 +79,10 @@ public class Juego {
         // El escuadrón mueve sus drones y devuelve los misiles que dispararon.
         misilesActivos.addAll(escuadronActual.actualizar());
 
-        // Los misiles descienden; al alcanzar su altitud de detonación, explotan
-        // dejando una explosión en ese punto (área de daño que dura unos instantes).
-        // Un misil detona si llega a su altitud programada O si choca contra la nave:
-        // al tocar el hitbox del avión explota en el acto (no se lo puede atravesar).
+        // Los misiles descienden y explotan al alcanzar su altitud de detonación programada
+        // O al tocar la nave (no se los puede atravesar). En ambos casos dejan una explosión
+        // que daña por DISTANCIA (tabla de la consigna): un choque cercano aplica el daño
+        // según qué tan cerca explota, no un golpe fijo.
         List<Misil> misilesAEliminar = new ArrayList<>();
         for (Misil misil : misilesActivos) {
             misil.descender();
@@ -133,22 +147,58 @@ public class Juego {
 
 
     // Mantiene hasta DRONES_ACTIVOS en pantalla; cada dron entra por un extremo aleatorio.
+    // Las entradas son a TIEMPOS ALEATORIOS: entra un dron, y el siguiente recién aparece
+    // tras una espera al azar (entre ESPERA_SPAWN_MIN y MAX ticks). Además, el extremo de
+    // entrada debe estar libre (si está ocupado se prueba el otro; si ambos lo están, se
+    // reintenta el próximo tick), para que nunca se apilen dos drones en el mismo punto.
     public void controlarSpawnDrones() {
-        while (escuadronActual.getDrones().size() < DRONES_ACTIVOS
-                && escuadronActual.getDronesRestantes() > 0) {
-            double mult       = nivelActual.getMultiplicadorDificultad();
-            double velocidad  = DRON_VEL_BASE     * mult;
-            double frecuencia = FREC_DISPARO_BASE * mult;
-            double velMisil   = MISIL_VEL_BASE    * mult;
-
-            boolean desdeIzquierda = Math.random() < 0.5;
-            float xSpawn    = desdeIzquierda ? 0f : (float) Config.ANCHO_M;
-            int   direccion = desdeIzquierda ? 1 : -1;
-
-            Dron nuevoDron = new Dron(xSpawn, (float) Config.ALTITUD_MAX,
-                    direccion, velocidad, frecuencia, velMisil);
-            escuadronActual.agregarDron(nuevoDron);
+        if (escuadronActual.getDrones().size() >= DRONES_ACTIVOS
+                || escuadronActual.getDronesRestantes() == 0) {
+            return;                                 // ya hay 4 (o no quedan drones por enviar)
         }
+        if (ticksParaProximoSpawn > 0) {
+            ticksParaProximoSpawn--;                // todavía esperando para el próximo dron
+            return;
+        }
+
+        boolean desdeIzquierda = Math.random() < 0.5;
+        if (!entradaLibre(desdeIzquierda)) {
+            desdeIzquierda = !desdeIzquierda;       // prueba el extremo opuesto
+            if (!entradaLibre(desdeIzquierda)) {
+                return;                             // ambos ocupados: reintentar próximo tick
+            }
+        }
+
+        double mult       = nivelActual.getMultiplicadorDificultad();
+        double velocidad  = DRON_VEL_BASE     * mult;
+        double frecuencia = FREC_DISPARO_BASE * mult;
+        double velMisil   = MISIL_VEL_BASE    * mult;
+        // El intervalo entre misiles también escala con el nivel (mínimo 1 tick): a más
+        // dificultad, menos cooldown, así los drones rápidos siguen disparando seguido.
+        int cooldown = Math.max(1, (int) Math.round(Config.COOLDOWN_DISPARO_TICKS / mult));
+
+        float xSpawn    = desdeIzquierda ? 0f : (float) Config.ANCHO_M;
+        int   direccion = desdeIzquierda ? 1 : -1;
+
+        Dron nuevoDron = new Dron(xSpawn, (float) Config.ALTITUD_MAX,
+                direccion, velocidad, frecuencia, velMisil, cooldown);
+        escuadronActual.agregarDron(nuevoDron);
+
+        // Programa la espera aleatoria hasta el siguiente dron.
+        ticksParaProximoSpawn = ESPERA_SPAWN_MIN
+                + (int) (Math.random() * (ESPERA_SPAWN_MAX - ESPERA_SPAWN_MIN + 1));
+    }
+
+    // ¿El extremo de entrada está libre? (no hay ningún dron a menos de SEPARACION_SPAWN
+    // metros), para no hacer aparecer un dron encima de otro.
+    private boolean entradaLibre(boolean desdeIzquierda) {
+        double xEntrada = desdeIzquierda ? 0.0 : Config.ANCHO_M;
+        for (Dron dron : escuadronActual.getDrones()) {
+            if (Math.abs(dron.getPosicionX() - xEntrada) < SEPARACION_SPAWN) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
@@ -160,8 +210,14 @@ public class Juego {
 
         if (escuadronActual.estaDestruido()) {
             jugadorActual.sumarPuntos(PUNTOS_NIVEL);
-            nivelActual.avanzarNivel();
 
+            // Tope de niveles: al superar el último nivel, el jugador gana el juego.
+            if (nivelActual.getNumeroNivel() >= NIVEL_MAX) {
+                estado = EstadoJuego.VICTORIA;
+                return;
+            }
+
+            nivelActual.avanzarNivel();
             escuadronActual = new Escuadron(nivelActual.getNumeroNivel(), TAM_ESCUADRON);
             controlarSpawnDrones();
         }

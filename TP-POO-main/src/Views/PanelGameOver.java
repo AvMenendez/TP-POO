@@ -11,18 +11,19 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 
-// Pantalla de fin de partida: muestra el puntaje y ofrece reiniciar o salir.
+// Pantalla de fin de partida (derrota o victoria): muestra el puntaje y ofrece reiniciar o salir.
 public class PanelGameOver extends JPanel {
 
     // Arma la pantalla con el puntaje final y los botones de reiniciar/menú/salir.
-    public PanelGameOver(int puntaje, Runnable onReiniciar, Runnable onMenu, Runnable onSalir) {
+    // 'gano' decide el título: victoria (superó el último nivel) o derrota.
+    public PanelGameOver(int puntaje, boolean gano, Runnable onReiniciar, Runnable onMenu, Runnable onSalir) {
         setPreferredSize(new Dimension(PanelJuego.ANCHO, PanelJuego.ALTO));
         setBackground(new Color(18, 22, 38));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JLabel titulo = new JLabel("GAME OVER");
+        JLabel titulo = new JLabel(gano ? "¡GANASTE!" : "GAME OVER");
         titulo.setFont(new Font("SansSerif", Font.BOLD, 48));
-        titulo.setForeground(new Color(230, 90, 90));
+        titulo.setForeground(gano ? new Color(90, 220, 120) : new Color(230, 90, 90));
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel labelPuntaje = new JLabel("Puntaje final: " + puntaje);

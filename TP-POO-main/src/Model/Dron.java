@@ -6,16 +6,20 @@ public class Dron extends ObjetoVolador {
 	private double velocidadMovimiento;   // m por tick
 	private double frecuenciaDisparo;     // probabilidad de disparar en cada tick
 	private double velocidadMisil;        // velocidad de caída de los misiles que lanza (m por tick)
+	private int    cooldownDisparo;       // intervalo (ticks) entre misiles, ya escalado por nivel
 	private int    cooldownRestante;      // ticks que faltan para poder volver a disparar
 
-	// Crea el dron con su posición, dirección, velocidad y datos de disparo.
+	// Crea el dron con su posición, dirección, velocidad y datos de disparo. El cooldown
+	// se recibe ya escalado por el nivel (como la velocidad y la frecuencia).
 	public Dron(float posicionX, float altitud, int direccionHorizontal,
-			double velocidadMovimiento, double frecuenciaDisparo, double velocidadMisil) {
+			double velocidadMovimiento, double frecuenciaDisparo, double velocidadMisil,
+			int cooldownDisparo) {
 		super(posicionX, altitud);
 		this.direccionHorizontal = direccionHorizontal;
 		this.velocidadMovimiento = velocidadMovimiento;
 		this.frecuenciaDisparo   = frecuenciaDisparo;
 		this.velocidadMisil      = velocidadMisil;
+		this.cooldownDisparo     = cooldownDisparo;
 	}
 
 	public void desplazarse() {
@@ -30,7 +34,7 @@ public class Dron extends ObjetoVolador {
 			return null;
 		}
 		if (Math.random() < frecuenciaDisparo) {
-			cooldownRestante = Config.COOLDOWN_DISPARO_TICKS;
+			cooldownRestante = cooldownDisparo;
 			return new Misil(getPosicionX(), getPosicionY(), velocidadMisil);
 		}
 		return null;

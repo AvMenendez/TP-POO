@@ -41,8 +41,10 @@ public class Explosion extends ObjetoVolador {
         return 1.0 - (double) vidaRestante / DURACION_TICKS;
     }
 
-    // Distancia 2D (en metros) entre la explosión y el CUERPO del avión: se mide al
-    // borde de su hitbox (no al punto central), porque la aeronave ocupa espacio.
+    // Distancia 2D (en metros) entre la explosión y el CUERPO del avión: a la distancia
+    // hasta su centro se le resta el radio del cuerpo (`RADIO_AVION`), porque la aeronave
+    // ocupa espacio (la consigna habla de "la distancia entre la explosión y la aeronave").
+    // Los tramos 20/80/150 m de la tabla se aplican sobre esta distancia al cuerpo.
     public double distanciaAlAvion(Avion a) {
         double dx = getPosicionX() - a.getPosicionX();
         double dy = getPosicionY() - a.getPosicionY();

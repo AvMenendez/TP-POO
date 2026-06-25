@@ -30,7 +30,7 @@ public class Avion extends ObjetoVolador{
 		return this.energia>0;
 	}
 
-	// Radio (en metros) del cuerpo de la nave, para medir distancias de daño al hitbox.
+	// Radio (en metros) del cuerpo de la nave: su hitbox para el choque con misiles.
 	public float getRadio() {
 		return (float) Config.RADIO_AVION;
 	}

@@ -101,11 +101,12 @@ public class ControladorJuego extends KeyAdapter {
         juego.actualizarJuego();
         panelJuego.repaint();
 
-        if (juego.getEstado() == EstadoJuego.GAME_OVER) {
+        EstadoJuego estado = juego.getEstado();
+        if (estado != EstadoJuego.JUGANDO) {        // fin de partida: derrota o victoria
             detenerTimer();
             int puntaje = juego.getJugadorActual().getPuntaje();
             leaderboard.registrar(juego.getJugadorActual().getNombreUsuario(), puntaje);
-            mostrarGameOver(puntaje);
+            mostrarFin(puntaje, estado == EstadoJuego.VICTORIA);
         }
     }
 
@@ -124,9 +125,9 @@ public class ControladorJuego extends KeyAdapter {
             avion.variarAltitud((int) Math.max(Config.ALTITUD_MIN, alt - VEL_ALTITUD));
     }
 
-    // Muestra la pantalla de fin de partida con el puntaje obtenido.
-    private void mostrarGameOver(int puntaje) {
-        mostrar(controladorGameOver.crearPanel(puntaje, this::nuevaPartida, this::mostrarMenu, this::salir));
+    // Muestra la pantalla de fin de partida (derrota o victoria) con el puntaje obtenido.
+    private void mostrarFin(int puntaje, boolean gano) {
+        mostrar(controladorGameOver.crearPanel(puntaje, gano, this::nuevaPartida, this::mostrarMenu, this::salir));
     }
 
     // Detiene el bucle de juego si está activo.

@@ -20,7 +20,7 @@ public final class Config {
     public static final double METROS_POR_PIXEL = 6.0;
 
     // Mundo en metros
-    public static final double ANCHO_M     = ANCHO_PX * METROS_POR_PIXEL; // 6400 m de ancho
+    public static final double ANCHO_M     = ANCHO_PX * METROS_POR_PIXEL; // 6000 m de ancho
 
     // Altitudes (metros) — reglas de la consigna
     public static final double ALTITUD_MIN    = 1000;  // altitud mínima del avión
@@ -35,13 +35,13 @@ public final class Config {
     public static final double RADIO_DANIO_ALTO = 80  * ESCALA_RADIO_EXPLOSION; // daño mayor
     public static final double RADIO_CRITICO    = 20  * ESCALA_RADIO_EXPLOSION; // pierde una vida
 
-    // Tamaño físico del avión (metros): la distancia de daño se mide al CUERPO de la
-    // nave, no a su punto central, porque la aeronave ocupa espacio (hitbox).
-    public static final double RADIO_AVION = 130;
-
-    // Tamaño físico del misil (metros): radio de su cuerpo para detectar el impacto
-    // directo contra la nave. Si el misil toca el hitbox del avión, detona en el acto.
-    public static final double RADIO_MISIL = 60;
+    // Radio del CUERPO del avión y del misil (metros). Dos usos:
+    //  - Daño: la distancia de la explosión se mide al CUERPO del avión (centro − RADIO_AVION),
+    //    porque la aeronave ocupa espacio; los tramos 20/80/150 se aplican a esa distancia.
+    //  - Choque: si el cuerpo del misil (RADIO_MISIL) toca el del avión, el misil DETONA en
+    //    el acto (no se lo puede atravesar) y el daño sale de la misma tabla por distancia.
+    public static final double RADIO_AVION = 200;
+    public static final double RADIO_MISIL = 40;
 
     // Escala SOLO visual de la explosión (no afecta el daño): la bola de fuego se
     // dibuja más grande que el radio de daño para que se vea dramática.

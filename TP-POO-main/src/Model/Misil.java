@@ -25,9 +25,8 @@ public class Misil extends ObjetoVolador {
 		return getPosicionY() <= altitudDetonacion;
 	}
 
-	// Impacta a la nave si su cuerpo entra en contacto con el hitbox del avión:
-	// la distancia entre centros es menor que la suma de ambos radios. En ese caso
-	// el misil detona donde está (impacto directo) en vez de atravesar la nave.
+	// Impacta de frente a la nave si su cuerpo toca el hitbox del avión: la distancia
+	// entre centros es menor que la suma de ambos radios (no se lo puede atravesar).
 	public boolean impactaA(Avion avion) {
 		double dx = getPosicionX() - avion.getPosicionX();
 		double dy = getPosicionY() - avion.getPosicionY();

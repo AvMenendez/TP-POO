@@ -24,6 +24,12 @@ public class PanelJuego extends JPanel {
     public static final int ANCHO = Config.ANCHO_PX;
     public static final int ALTO  = Config.ALTO_PX;
 
+    // Tamaño de dibujo de cada objeto, en píxeles (solo visual; no afecta el daño).
+    private static final int DRON_PX  = 96;       // dron (cuadrado)
+    private static final int NAVE_PX  = 96;       // nave del jugador (cuadrado)
+    private static final int MISIL_W  = 36;       // ancho del misil
+    private static final int MISIL_H  = 66;       // alto del misil
+
     private final Juego juego;
 
     // Crea el panel del juego asociado al modelo que va a dibujar.
@@ -48,7 +54,7 @@ public class PanelJuego extends JPanel {
             int dx = Config.xAPixel(d.getPosicionX());
             int dy = Config.altitudAPixel(d.getPosicionY());
             if (Sprites.DRON != null) {
-                dibujarSprite(g2, Sprites.DRON, dx, dy, 64, 64);
+                dibujarSprite(g2, Sprites.DRON, dx, dy, DRON_PX, DRON_PX);
             } else {
                 dibujarDron(g2, dx, dy);
             }
@@ -59,7 +65,7 @@ public class PanelJuego extends JPanel {
             int mx = Config.xAPixel(m.getPosicionX());
             int my = Config.altitudAPixel(m.getPosicionY());
             if (Sprites.MISIL != null) {
-                dibujarSprite(g2, Sprites.MISIL, mx, my, 24, 44);
+                dibujarSprite(g2, Sprites.MISIL, mx, my, MISIL_W, MISIL_H);
             } else {
                 dibujarMisil(g2, mx, my);
             }
@@ -73,7 +79,7 @@ public class PanelJuego extends JPanel {
         int ax = Config.xAPixel(avion.getPosicionX());
         int ay = Config.altitudAPixel(avion.getPosicionY());
         if (Sprites.NAVE != null) {
-            dibujarSprite(g2, Sprites.NAVE, ax, ay, 64, 64);
+            dibujarSprite(g2, Sprites.NAVE, ax, ay, NAVE_PX, NAVE_PX);
         } else {
             dibujarAvion(g2, ax, ay);
         }
@@ -297,10 +303,10 @@ public class PanelJuego extends JPanel {
         g2.fillRect(0, 0, ANCHO, 36);
 
         g2.setColor(Color.WHITE);
-        g2.drawString("Nivel: "   + juego.getNivelActual().getNumeroNivel(),    12, 23);
-        g2.drawString("Puntaje: " + juego.getJugadorActual().getPuntaje(),      90, 23);
-        g2.drawString("Vidas: "   + juego.getJugadorActual().getVidas(),       220, 23);
-        g2.drawString("Altitud: " + (int) avion.getPosicionY() + " m",        310, 23);
+        g2.drawString("Nivel: " + juego.getNivelActual().getNumeroNivel() + "/" + Juego.NIVEL_MAX, 12, 23);
+        g2.drawString("Puntaje: " + juego.getJugadorActual().getPuntaje(),     120, 23);
+        g2.drawString("Vidas: "   + juego.getJugadorActual().getVidas(),       250, 23);
+        g2.drawString("Altitud: " + (int) avion.getPosicionY() + " m",        340, 23);
 
         // Barra de energía (a la derecha)
         int energia = (int) avion.getEnergia();
