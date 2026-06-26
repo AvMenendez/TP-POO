@@ -1,5 +1,7 @@
 package Views;
 
+import Model.GestorSonido;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JTextField;
@@ -24,13 +26,17 @@ public class PanelNombre extends PanelFondo {
         campoNombre.setHorizontalAlignment(JTextField.CENTER);
 
         // Confirmar con el botón o con Enter dentro del campo.
-        Runnable confirmar = () -> onComenzar.accept(nombreIngresado());
+        Runnable confirmar = () -> {
+            GestorSonido.detenerMusica();
+            GestorSonido.reproducir("/Sounds/iniciarJuego.wav");
+            onComenzar.accept(nombreIngresado());
+        };
         campoNombre.addActionListener(e -> confirmar.run());
 
         add(Box.createVerticalGlue());
-        add(Estilo.titulo("¿Quién será el que marcará un nuevo récord?", 26, Estilo.ACENTO));
+        add(Estilo.titulo("¿Listo para marcar un nuevo récord?", 26, Estilo.ACENTO));
         add(Box.createRigidArea(new Dimension(0, 28)));
-        add(Estilo.etiqueta("Ingresá tu nombre, piloto:", 18, Estilo.TEXTO_TENUE));
+        add(Estilo.etiqueta("Ingresá tu nombre:", 18, Estilo.TEXTO_TENUE));
         add(Box.createRigidArea(new Dimension(0, 12)));
         add(campoNombre);
         add(Box.createRigidArea(new Dimension(0, 28)));

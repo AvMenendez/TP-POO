@@ -137,6 +137,7 @@ public class Juego {
             jugadorActual.recibirDanio(DANIO_CERCA);
         } else {                                    // < 20 m: impacto crítico, pierde una vida
             jugadorActual.modificarVidas(-1);
+            GestorSonido.reproducir("/Sounds/perderVida.wav");
         }
     }
 
@@ -195,6 +196,7 @@ public class Juego {
 
         if (escuadronActual.estaDestruido()) {
             jugadorActual.sumarPuntos(PUNTOS_NIVEL);
+            GestorSonido.reproducir("/Sounds/subirDeNivel.wav");
 
             if (nivelActual.getNumeroNivel() >= NIVEL_MAX) {
                 estado = EstadoJuego.VICTORIA;

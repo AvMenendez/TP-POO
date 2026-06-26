@@ -1,13 +1,6 @@
 package Controlador;
 
-import Model.Avion;
-import Model.Config;
-import Model.EstadoJuego;
-import Model.Escuadron;
-import Model.Juego;
-import Model.Jugador;
-import Model.Leaderboard;
-import Model.Nivel;
+import Model.*;
 import Views.MenuPrincipal;
 import Views.PanelJuego;
 import Views.PanelLeaderboard;
@@ -48,6 +41,7 @@ public class ControladorJuego {
     private void mostrarMenu() {
         detenerTimer();
         mostrar(new MenuPrincipal(this::mostrarPedirNombre, this::mostrarLeaderboard, this::mostrarOpciones, this::salir));
+        GestorSonido.reproducirMusicaEnLoop("/Sounds/Entry_Screen_Rimworld_OST.wav");
     }
 
     // Muestra la pantalla para ingresar el nombre y luego empieza la partida.
@@ -85,6 +79,7 @@ public class ControladorJuego {
         mostrar(panelJuego);
 
         detenerTimer();
+        GestorSonido.reproducirMusicaEnLoop("/Sounds/Enemy_Approaching.wav");
         timer = new Timer(DELAY_MS, e -> tick());
         timer.start();
     }
@@ -98,6 +93,7 @@ public class ControladorJuego {
         EstadoJuego estado = juego.getEstado();
         if (estado != EstadoJuego.JUGANDO) {        // fin de partida: derrota o victoria
             detenerTimer();
+            GestorSonido.detenerMusica();
             int puntaje = juego.getJugadorActual().getPuntaje();
             leaderboard.registrar(juego.getJugadorActual().getNombreUsuario(), puntaje);
             mostrarFin(puntaje, estado == EstadoJuego.VICTORIA);
