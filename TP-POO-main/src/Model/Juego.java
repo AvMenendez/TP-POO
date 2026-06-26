@@ -1,5 +1,6 @@
 package Model;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Juego {
@@ -28,14 +29,14 @@ public class Juego {
     private static final int PUNTOS_CERCA = 10;    // explosión entre 20 y 80 m (esquive por los pelos)
 
     // Distancias de zona (metros)
-    private static final double DIST_LEJOS = Config.RADIO_DANIO;       // 150
-    private static final double DIST_MEDIA = Config.RADIO_DANIO_ALTO;  // 80
-    private static final double DIST_CERCA = Config.RADIO_CRITICO;     // 20
+    private static final double DIST_LEJOS   = Config.RADIO_DANIO;       // 150
+    private static final double DIST_MEDIA   = Config.RADIO_DANIO_ALTO;  // 80
+    private static final double DIST_CERCA   = Config.RADIO_CRITICO;     // 20
+    private static final double DIST_AMENAZA = Config.RADIO_AMENAZA;     // 600: tope del esquive
 
     // Daño por zona (% de energía)
-    private static final int   DANIO_MEDIA    = 20;
-    private static final int   DANIO_CERCA    = 40;
-    private static final float ENERGIA_MAXIMA = 100f;
+    private static final int DANIO_MEDIA = 20;
+    private static final int DANIO_CERCA = 40;
 
     // Atributos
     private Jugador         jugadorActual;
@@ -104,10 +105,12 @@ public class Juego {
             if (!exp.estaResuelta()) {
                 double distancia = exp.distanciaAlAvion(avion);
                 if (distancia <= DIST_LEJOS) {      // el avión entró en alguna zona de daño
-                    aplicarDanioPorDistancia(distancia, avion);
+                    aplicarDanioPorDistancia(distancia);
                     exp.marcarResuelta();
-                } else if (exp.terminada()) {        // nunca entró al radio: esquive limpio
-                    jugadorActual.sumarPuntos(PUNTOS_LEJOS);
+                } else if (exp.terminada()) {        // la explosión se apagó sin tocar al avión
+                    if (distancia <= DIST_AMENAZA) { // 150–600 m: el misil fue una amenaza real → esquive
+                        jugadorActual.sumarPuntos(PUNTOS_LEJOS);
+                    }                                // > 600 m: nunca fue peligro → no otorga puntos
                     exp.marcarResuelta();
                 }
             }
@@ -125,23 +128,15 @@ public class Juego {
     //  Media        80 – 150 m     20 pts        -20% energía
     //  Cerca        20 – 80 m      10 pts        -40% energía (esquive por los pelos)
     //  Crítica      < 20 m          0 pts        pierde 1 vida
-    private void aplicarDanioPorDistancia(double distancia, Avion avion) {
+    private void aplicarDanioPorDistancia(double distancia) {
         if (distancia >= DIST_MEDIA) {              // 80–150 m: daño leve + puntos
             jugadorActual.sumarPuntos(PUNTOS_MEDIA);
-            daniarAvion(avion, DANIO_MEDIA);
+            jugadorActual.recibirDanio(DANIO_MEDIA);
         } else if (distancia >= DIST_CERCA) {       // 20–80 m: daño alto + puntos reducidos
             jugadorActual.sumarPuntos(PUNTOS_CERCA);
-            daniarAvion(avion, DANIO_CERCA);
+            jugadorActual.recibirDanio(DANIO_CERCA);
         } else {                                    // < 20 m: impacto crítico, pierde una vida
             jugadorActual.modificarVidas(-1);
-        }
-    }
-
-    private void daniarAvion(Avion avion, int porcentaje) {
-        avion.recibirDanio(porcentaje);
-        if (!avion.estaActivo()) {
-            jugadorActual.modificarVidas(-1);
-            avion.setEnergia(ENERGIA_MAXIMA);
         }
     }
 
@@ -207,7 +202,7 @@ public class Juego {
             }
 
             nivelActual.avanzarNivel();
-            escuadronActual = new Escuadron(nivelActual.getNumeroNivel(), TAM_ESCUADRON);
+            escuadronActual = new Escuadron(TAM_ESCUADRON);
             controlarSpawnDrones();
         }
     }
@@ -229,11 +224,12 @@ public class Juego {
         return escuadronActual;
     }
 
+    // Solo lectura: la Vista únicamente recorre estas listas para dibujarlas.
     public List<Misil> getMisilesActivos() {
-        return misilesActivos;
+        return Collections.unmodifiableList(misilesActivos);
     }
 
     public List<Explosion> getExplosionesActivas() {
-        return explosionesActivas;
+        return Collections.unmodifiableList(explosionesActivas);
     }
 }

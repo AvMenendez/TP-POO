@@ -26,6 +26,15 @@ public class Jugador {
 		   this.vidas = Math.max(0, this.vidas + cantidad);
 	}
 
+	// Aplica daño a la nave; si se queda sin energía, pierde una vida y la nave se repone.
+	public void recibirDanio(int porcentaje) {
+		avionActivo.recibirDanio(porcentaje);
+		if (!avionActivo.estaActivo()) {
+			modificarVidas(-1);
+			avionActivo.reponerEnergia();
+		}
+	}
+
 
 
 	// Suma puntos y otorga una vida extra cada 1000 puntos.
@@ -48,19 +57,9 @@ public class Jugador {
 		return nombreUsuario;
 	}
 
-	// Fija el nombre del jugador.
-	public void setNombreUsuario(String nombreUsuario) {
-		this.nombreUsuario = nombreUsuario;
-	}
-
 	// Devuelve las vidas actuales.
 	public int getVidas() {
 		return vidas;
-	}
-
-	// Fija las vidas.
-	public void setVidas(int vidas) {
-		this.vidas = vidas;
 	}
 
 	// Devuelve el puntaje actual.
@@ -68,20 +67,8 @@ public class Jugador {
 		return puntaje;
 	}
 
-	// Fija el puntaje.
-	public void setPuntaje(int puntaje) {
-		this.puntaje = puntaje;
-	}
-
 	// Devuelve la nave que el jugador está usando.
 	public Avion getAvionActivo() {
 		return avionActivo;
 	}
-
-	// Fija la nave que el jugador está usando.
-	public void setAvionActivo(Avion avionActivo) {
-		this.avionActivo = avionActivo;
-	}
-	
-	
 }

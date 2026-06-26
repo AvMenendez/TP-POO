@@ -35,15 +35,18 @@ src/
     Explosion.java               Área de daño que persiste unos instantes
     Escuadron.java               Grupo de 10 drones (máx 4 activos)
     Nivel.java                   Número de nivel y multiplicador de dificultad
-    Jugador.java                 Nombre, vidas, puntaje, vida extra
+    Jugador.java                 Nombre, vidas, puntaje, vida extra y daño a la nave
     Juego.java                   Orquesta el modelo (loop, spawn, daño, victoria)
     EstadoJuego.java             enum: JUGANDO / GAME_OVER / VICTORIA
     Leaderboard.java             Top 5 partidas, persistido en leaderboard.csv
     Config.java                  TODAS las constantes ajustables (ver abajo)
   Controlador/
-    ControladorJuego.java        Game loop (Timer), teclado, navegación de pantallas
+    ControladorJuego.java        Game loop (Timer) y navegación de pantallas
+    ControladorTeclado.java      Traduce flechas/WASD en intención de movimiento
     ControladorGameOver.java     Arma la pantalla de Game Over
   Views/
+    PanelFondo.java              Base de los menús: fondo general (imagen) + boilerplate común
+    Estilo.java                  Paleta y fábricas de UI (botones/títulos): un solo "look"
     PanelJuego.java              Dibuja el juego (convierte metros -> píxeles)
     MenuPrincipal.java           Menú: Jugar / Leaderboard / Opciones / Exit
     PanelNombre.java             Pide el nombre antes de jugar
@@ -51,7 +54,8 @@ src/
     PanelOpciones.java           Placeholder para configuraciones futuras
     PanelGameOver.java           Fin de partida (Reiniciar / Menú / Salir)
     Sprites.java                 Carga las imágenes desde Res/Sprites/
-Res/Sprites/                     Imágenes de los objetos (PNG transparentes)
+Res/Sprites/                     Imágenes de los objetos y el fondo (PNG)
+Res/Fuentes/Silkscreen/          Fuente Silkscreen (.ttf) de los botones
 ```
 
 ---
@@ -67,16 +71,19 @@ Res/Sprites/                     Imágenes de los objetos (PNG transparentes)
 | Cada dron entra por un **extremo aleatorio**, a tiempos aleatorios y sin superponerse | ✅ | `Juego.controlarSpawnDrones` / `entradaLibre` |
 | Sobrevivir → avanza de nivel | ✅ | `Juego.verificarCondicionVictoria` |
 | Por nivel aumentan vel. drones, vel. caída misiles y frecuencia **+15%** | ✅ | `Nivel.INCREMENTO_POR_NIVEL` |
-| Daño por distancia explosión↔avión (40/20/0 pts; 0/-20%/-40%; <20 vida) | ✅ | `Juego.aplicarDanioPorDistancia` |
+| Daño por distancia explosión↔avión (40/20/10/0 pts; 0/-20%/-40%; <20 vida) | ✅ | `Juego.aplicarDanioPorDistancia`, `Jugador.recibirDanio` |
 | **+300** puntos por superar nivel | ✅ | `Juego.PUNTOS_NIVEL` |
 | **Vida extra cada 1000** puntos | ✅ | `Jugador.sumarPuntos` |
 
-Tabla de daño (consigna), medida **al cuerpo del avión** (distancia de la explosión a la
+Tabla de daño, medida **al cuerpo del avión** (distancia de la explosión a la
 superficie de la nave = distancia al centro − `RADIO_AVION`, porque la aeronave ocupa espacio):
-- **> 150 m** → +40 puntos, sin daño
+- **> 150 m** → +40 puntos, sin daño (esquive limpio; ver moderación con `RADIO_AMENAZA` abajo)
 - **80–150 m** → +20 puntos, −20% energía
-- **20–80 m** → 0 puntos, −40% energía
+- **20–80 m** → +10 puntos, −40% energía  *(extensión: la consigna da 0)*
 - **< 20 m** → pierde una vida
+
+Si la nave se queda sin energía por el daño acumulado, pierde una vida y la energía se
+repone al máximo (`Jugador.recibirDanio` → `Avion.reponerEnergia`).
 
 ---
 
@@ -140,6 +147,30 @@ superficie de la nave = distancia al centro − `RADIO_AVION`, porque la aeronav
    el juego termina con **victoria** (`EstadoJuego.VICTORIA` → pantalla "¡GANASTE!"). El
    HUD muestra el progreso como `Nivel: n/15`.
 
+10. **Moderación del puntaje (`RADIO_AMENAZA`).** El +40 por "esquive limpio" se otorga
+    solo si el misil realmente fue una amenaza: detonó a ≤ `RADIO_AMENAZA` (600 m) del
+    cuerpo del avión. Como los misiles caen rectos y la mayoría explota lejos, sin este
+    tope cada misil sumaba +40 y el puntaje (y las vidas extra) se disparaba. Más allá de
+    esa banda no suma puntos (`Juego.actualizarExplosiones`).
+
+11. **Daño resuelto en el modelo (Information Expert).** El que tiene las vidas y la nave
+    es quien decide qué pasa con el daño: `Jugador.recibirDanio` daña la nave y, si se
+    queda sin energía, descuenta una vida y la repone (`Avion.reponerEnergia`). El
+    orquestador (`Juego`) ya no manipula la energía de la nave.
+
+12. **Teclado separado del orquestador (SRP).** `ControladorTeclado` traduce flechas/WASD
+    en intención de movimiento; `ControladorJuego` solo consulta su estado y se ocupa del
+    loop y la navegación. Antes el controlador hacía las dos cosas (era `KeyAdapter`).
+
+13. **UI compartida sin repetición (DRY/SRP/OCP).** `PanelFondo` es la clase base de los
+    menús: concentra el armado común (tamaño/layout/margen) y dibuja el fondo con velo
+    oscuro. Acepta una imagen por pantalla (constructor con `BufferedImage`): el menú usa
+    `Sprites.FONDO_MENU` y el resto el `Sprites.FONDO` general, con cascada de respaldo.
+    `Estilo` centraliza la paleta y las fábricas de botones/títulos (Pure Fabrication), así
+    el "look" se define en un solo lugar. Los botones son transparentes (solo texto blanco)
+    con fuente **Silkscreen**; el título del menú usa Silkscreen y combina colores por
+    palabra vía HTML (`Estilo.tituloSilkscreen` + `Estilo.coloreado`).
+
 ---
 
 ## Constantes ajustables (`Model/Config.java`)
@@ -152,7 +183,11 @@ superficie de la nave = distancia al centro − `RADIO_AVION`, porque la aeronav
 | `COOLDOWN_DISPARO_TICKS` | 33 (=1 s) | Cooldown base entre misiles (nivel 1); se divide por el multiplicador del nivel |
 | `ALTITUD_MIN/MAX` | 1000 / 5000 | Rango de altitud del avión (consigna) |
 | `DETONACION_MIN/MAX` | 1200 / 4500 | Altitud de detonación (consigna) |
+| `VEL_HORIZONTAL / VEL_ALTITUD` | 56 / 56 | Velocidad de la nave del jugador (m por tick) |
+| `ALTITUD_INICIAL` | 1500 | Altitud de la nave al empezar la partida |
+| `VIDAS_INICIALES` | 3 | Vidas con las que arranca el jugador |
 | `RADIO_DANIO / _ALTO / _CRITICO` | 150 / 80 / 20 | Distancias de daño (consigna) |
+| `RADIO_AMENAZA` | 600 | Banda exterior: el +40 por esquive se da solo si el misil detonó a ≤ 600 m |
 | `ESCALA_RADIO_EXPLOSION` | 1.0 | 1.0 = consigna exacta |
 | `RADIO_AVION` | 200 | Radio del cuerpo de la nave: se resta para medir el daño al cuerpo y define el choque |
 | `RADIO_MISIL` | 40 | Radio del cuerpo del misil para el choque con la nave |
@@ -167,8 +202,10 @@ superar el nivel 15 se gana el juego → `EstadoJuego.VICTORIA`), `DRONES_ACTIVO
 y evita los "dúos"), `ESPERA_SPAWN_MIN=10`/`ESPERA_SPAWN_MAX=40` (jitter aleatorio
 en ticks entre un dron y el siguiente), `DRON_VEL_BASE=22`, `MISIL_VEL_BASE=32`,
 `FREC_DISPARO_BASE=0.04` (velocidades/frecuencia base del nivel 1; valores propios,
-escalan +15% por nivel), `PUNTOS_NIVEL=300`. Dificultad por nivel en
-`Nivel.INCREMENTO_POR_NIVEL=0.15`. Vidas iniciales 3 (`ControladorJuego.nuevaPartida`).
+escalan +15% por nivel), `PUNTOS_NIVEL=300`, `PUNTOS_LEJOS/MEDIA/CERCA=40/20/10`.
+Dificultad por nivel en `Nivel.INCREMENTO_POR_NIVEL=0.15`. Las vidas y velocidades
+iniciales de la nave ahora viven en `Config` (`VIDAS_INICIALES`, `VEL_HORIZONTAL`,
+`VEL_ALTITUD`, `ALTITUD_INICIAL`). El escuadrón se crea con `new Escuadron(TAM_ESCUADRON)`.
 
 ---
 
@@ -181,6 +218,21 @@ Nombres esperados (PNG con **fondo transparente**): `dron.png`, `misil.png`,
 - `misil.png` → **recortado de `dron.png`** (el mismo misil que cuelga del dron:
   cabezal rojo + cuerpo verde, punta abajo), así coincide con el del dron. El original
   quedó respaldado en `misil_backup.png`.
+- `fondo.png` → **fondo general** de las pantallas (los menús lo dibujan vía
+  `PanelFondo` con un velo oscuro; el juego, vía `PanelJuego`). Si falta, queda el
+  color de respaldo `Estilo.FONDO`.
+- `fondo_menu.png` → **fondo propio del menú principal** (`Sprites.FONDO_MENU`). Cada
+  pantalla puede pasarle a `PanelFondo` su imagen; si la específica no está, cae al
+  fondo general y, si tampoco, al color de respaldo.
+
+---
+
+## Fuente (`Res/Fuentes/Silkscreen/`)
+
+Los botones usan la fuente **Silkscreen** (`slkscr.ttf` regular / `slkscrb.ttf` bold).
+**Debe estar instalada en el sistema** (clic derecho en el `.ttf` → *Instalar*), porque el
+código la pide por nombre (`new Font("Silkscreen", ...)` en `Estilo`). Si no está instalada,
+los botones salen igual (transparentes, texto blanco) pero con la fuente por defecto.
 
 ---
 
@@ -197,12 +249,19 @@ Nombres esperados (PNG con **fondo transparente**): `dron.png`, `misil.png`,
 Se mantuvo la estructura MVC. Mejoras aplicadas respecto a la versión original:
 - Lógica de drones movida al `Escuadron` (Information Expert).
 - Detonación y choque decididos por el propio `Misil` (`haDetonado` / `impactaA`, Information Expert).
-- Daño/detonación coherente: energía ↔ vidas conectadas.
-- Constantes nombradas en `Config` (menos "números mágicos").
+- Daño resuelto en el modelo: `Jugador.recibirDanio` coordina energía ↔ vidas y la `Avion`
+  es dueña de su energía (`reponerEnergia`); el orquestador ya no la manipula (Information Expert).
+- Encapsulamiento: se quitaron setters/getters muertos que permitían romper invariantes
+  (p. ej. `setPuntaje`), y las listas expuestas (`getDrones`, `getMisilesActivos`,
+  `getExplosionesActivas`) se devuelven en **solo lectura**.
+- UI sin repetición (DRY/SRP/OCP): `PanelFondo` (base de menús con el fondo común) y `Estilo`
+  (paleta + fábricas de botones/títulos en un solo lugar, una *Pure Fabrication*).
+- Input separado: `ControladorTeclado` maneja el teclado; `ControladorJuego` solo orquesta (SRP).
+- Constantes de jugabilidad nombradas y centralizadas en `Config`.
 - La Vista no tiene reglas; el Modelo no hace I/O de presentación.
 - Cada función tiene un comentario breve que explica qué hace.
 
-Puntos aún mejorables (si se pide más rigor): varios setters públicos rompen
-encapsulamiento; `getDrones()`/`getMisilesActivos()` exponen las listas internas;
-`ObjetoVolador` no define un contrato polimórfico (cada subclase tiene su método de
-movimiento). No son bloqueantes para el funcionamiento.
+Decisión consciente: `ObjetoVolador` es una base que comparte **solo el estado de posición**
+(no define un `mover()` polimórfico). Es a propósito: los objetos se mueven de forma
+heterogénea (la nave por input externo con parámetros; la explosión no se mueve), así que
+forzar un contrato común obligaría a métodos vacíos o artificiales y empeoraría el diseño.

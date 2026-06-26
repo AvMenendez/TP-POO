@@ -36,7 +36,7 @@ public class PanelJuego extends JPanel {
     public PanelJuego(Juego juego) {
         this.juego = juego;
         setPreferredSize(new Dimension(ANCHO, ALTO));
-        setBackground(new Color(18, 22, 38));
+        setBackground(Estilo.FONDO);
         setFocusable(true);
     }
 
@@ -48,6 +48,15 @@ public class PanelJuego extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         // Mantiene el pixel-art nítido al escalar las imágenes.
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+        // Fondo: imagen estirada a toda la ventana. Si no está, queda el color liso del panel.
+        // Se usa interpolación suave (bilineal) solo acá para que la foto no se vea pixelada;
+        // los sprites siguen usando NEAREST_NEIGHBOR para mantener el pixel-art nítido.
+        if (Sprites.FONDO != null) {
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.drawImage(Sprites.FONDO, 0, 0, getWidth(), getHeight(), null);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        }
 
         // Drones enemigos
         for (Dron d : juego.getEscuadronActual().getDrones()) {

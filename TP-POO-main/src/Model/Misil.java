@@ -33,14 +33,4 @@ public class Misil extends ObjetoVolador {
 		double distancia = Math.sqrt(dx * dx + dy * dy);
 		return distancia <= avion.getRadio() + Config.RADIO_MISIL;
 	}
-
-	// Devuelve la altitud a la que este misil explotará.
-	public double getAltitudDetonacion() {
-		return altitudDetonacion;
-	}
-
-	// Devuelve cuántos metros baja el misil en cada tick.
-	public double getVelocidadCaida() {
-		return velocidadCaida;
-	}
 }

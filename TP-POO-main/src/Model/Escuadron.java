@@ -1,19 +1,18 @@
 package Model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
 public class Escuadron {
 
     private int        dronesRestantes;
-    private int        numeroEscuadron;
     private List<Dron> drones;
 
 
-    // Crea el escuadrón con su número y la cantidad de drones que le quedan por enviar.
-     public Escuadron(int numeroEscuadron, int dronesRestantes) {
-        this.numeroEscuadron = numeroEscuadron;
+    // Crea el escuadrón con la cantidad de drones que le quedan por enviar.
+     public Escuadron(int dronesRestantes) {
         this.dronesRestantes = dronesRestantes;
         this.drones          = new ArrayList<>();
     }
@@ -37,14 +36,12 @@ public class Escuadron {
             }
         }
 
-        for (Dron dron : dronesAEliminar) {
-            eliminarDron(dron);
-        }
+        drones.removeAll(dronesAEliminar);
 
         return misilesGenerados;
     }
 
- 
+
     // Devuelve cuántos drones faltan por enviar a la pantalla.
     public int getDronesRestantes() {
         return dronesRestantes;
@@ -63,34 +60,8 @@ public class Escuadron {
         }
     }
 
-    // Quita un dron de la pantalla.
-    public void eliminarDron(Dron dron) {
-        drones.remove(dron);
-    }
-
-    // -------------------------------------------------------------------------
-    // Getters y Setters
-    // -------------------------------------------------------------------------
-
-    // Devuelve el número de escuadrón.
-    public int getNumeroEscuadron() {
-        return numeroEscuadron;
-    }
-
-    // Fija el número de escuadrón.
-    public void setNumeroEscuadron(int numeroEscuadron) {
-        this.numeroEscuadron = numeroEscuadron;
-    }
-
-    // Fija cuántos drones quedan por enviar.
-    public void setDronesRestantes(int dronesRestantes) {
-        this.dronesRestantes = dronesRestantes;
-    }
-
-    // Devuelve la lista de drones que están en pantalla.
+    // Devuelve la lista de drones en pantalla en SOLO LECTURA (la Vista solo la recorre).
     public List<Dron> getDrones() {
-        return drones;
+        return Collections.unmodifiableList(drones);
     }
-
-   
 }

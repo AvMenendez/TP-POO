@@ -25,6 +25,12 @@ public final class Config {
     // Altitudes (metros) — reglas de la consigna
     public static final double ALTITUD_MIN    = 1000;  // altitud mínima del avión
     public static final double ALTITUD_MAX    = 5000;  // altitud máxima del avión y altura de los drones
+
+    // Nave del jugador (tunables de jugabilidad, antes dispersos en el Controlador)
+    public static final double VEL_HORIZONTAL  = 56;   // m por tick que se mueve la nave de lado
+    public static final double VEL_ALTITUD     = 56;   // m por tick que sube/baja la nave
+    public static final double ALTITUD_INICIAL = 1500; // altitud (m) al empezar la partida
+    public static final int    VIDAS_INICIALES = 3;    // vidas con las que arranca el jugador
     public static final double DETONACION_MIN = 1200;  // altitud mínima de detonación de un misil
     public static final double DETONACION_MAX = 4500;  // altitud máxima de detonación de un misil
 
@@ -34,6 +40,12 @@ public final class Config {
     public static final double RADIO_DANIO      = 150 * ESCALA_RADIO_EXPLOSION; // daño; fuera, a salvo + puntos
     public static final double RADIO_DANIO_ALTO = 80  * ESCALA_RADIO_EXPLOSION; // daño mayor
     public static final double RADIO_CRITICO    = 20  * ESCALA_RADIO_EXPLOSION; // pierde una vida
+
+    // Banda exterior de "amenaza" (metros, medidos al cuerpo del avión): solo los misiles
+    // que detonan dentro de RADIO_DANIO..RADIO_AMENAZA cuentan como esquive real (+40 pts).
+    // Más allá de esto el misil nunca fue un peligro y no otorga puntos, para que el puntaje
+    // (y por lo tanto las vidas extra) no se dispare por misiles que caen lejos del avión.
+    public static final double RADIO_AMENAZA = 600;
 
     // Radio del CUERPO del avión y del misil (metros). Dos usos:
     //  - Daño: la distancia de la explosión se mide al CUERPO del avión (centro − RADIO_AVION),

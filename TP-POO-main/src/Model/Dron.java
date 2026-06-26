@@ -45,24 +45,4 @@ public class Dron extends ObjetoVolador {
 		float x = getPosicionX();
 		return x < 0f || x > Config.ANCHO_M;
 	}
-
-	// Devuelve la dirección horizontal (+1 derecha, -1 izquierda).
-	public int getDireccionHorizontal() {
-		return direccionHorizontal;
-	}
-
-	// Devuelve la velocidad de movimiento del dron (m por tick).
-	public double getVelocidadMovimiento() {
-		return velocidadMovimiento;
-	}
-
-	// Devuelve la probabilidad de disparar en cada tick.
-	public double getFrecuenciaDisparo() {
-		return frecuenciaDisparo;
-	}
-
-	// Devuelve la velocidad de caída de los misiles que lanza.
-	public double getVelocidadMisil() {
-		return velocidadMisil;
-	}
 }

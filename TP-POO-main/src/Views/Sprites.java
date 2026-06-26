@@ -19,6 +19,8 @@ public final class Sprites {
     public static final BufferedImage MISIL     = cargar("misil");
     public static final BufferedImage EXPLOSION = cargar("explosion");
     public static final BufferedImage NAVE      = cargar("nave");
+    public static final BufferedImage FONDO     = cargar("fondo");        // fondo general
+    public static final BufferedImage FONDO_MENU = cargar("fondo_menu");  // fondo propio del menú
 
     // Busca y carga la imagen por su nombre; si no la encuentra, devuelve null.
     private static BufferedImage cargar(String base) {

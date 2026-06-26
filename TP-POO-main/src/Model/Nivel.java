@@ -29,17 +29,4 @@ public class Nivel {
 	public int getNumeroNivel() {
 		return numeroNivel;
 	}
-
-	// Fija el número de nivel.
-	public void setNumeroNivel(int numeroNivel) {
-		this.numeroNivel = numeroNivel;
-	}
-
-	// Fija el multiplicador de dificultad.
-	public void setMultiplicadorDificultad(double multiplicadorDificultad) {
-		this.multiplicadorDificultad = multiplicadorDificultad;
-	}
-	
-	
-
 }

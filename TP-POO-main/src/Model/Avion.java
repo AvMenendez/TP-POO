@@ -1,12 +1,15 @@
 package Model;
 
 public class Avion extends ObjetoVolador{
+
+	private static final float ENERGIA_MAXIMA = 100f;
+
 	private float energia;
-	
-	// Crea la nave con su posición, altitud y energía iniciales.
-	public Avion(float posicionX, float posicionY, float energia) {
+
+	// Crea la nave en una posición/altitud con la energía al máximo.
+	public Avion(float posicionX, float posicionY) {
 		super (posicionX, posicionY);
-		this.energia = energia;
+		this.energia = ENERGIA_MAXIMA;
 	}
 
 	// Mueve la nave a izquierda/derecha.
@@ -30,6 +33,11 @@ public class Avion extends ObjetoVolador{
 		return this.energia>0;
 	}
 
+	// Repone la energía al máximo (se usa al perder una vida).
+	public void reponerEnergia() {
+		this.energia = ENERGIA_MAXIMA;
+	}
+
 	// Radio (en metros) del cuerpo de la nave: su hitbox para el choque con misiles.
 	public float getRadio() {
 		return (float) Config.RADIO_AVION;
@@ -39,12 +47,4 @@ public class Avion extends ObjetoVolador{
 	public float getEnergia() {
 		return energia;
 	}
-
-	// Fija la energía de la nave (se usa al reponerla tras perder una vida).
-	public void setEnergia(float energia) {
-		this.energia = energia;
-	}
-	
-	
 }
-

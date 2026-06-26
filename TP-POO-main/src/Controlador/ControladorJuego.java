@@ -17,28 +17,22 @@ import Views.PanelOpciones;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.Timer;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyAdapter;
 
-// Orquesta la partida: crea el modelo, ejecuta el game loop, traduce el teclado
-// en movimiento del avión y navega entre menú / juego / leaderboard / opciones / game over.
-public class ControladorJuego extends KeyAdapter {
+// Orquesta la partida: crea el modelo, ejecuta el game loop y navega entre menú / juego /
+// leaderboard / opciones / game over. El teclado lo maneja ControladorTeclado (SRP).
+public class ControladorJuego {
 
-    private static final int    DELAY_MS = Config.MS_POR_TICK; // duración de cada tick (~33 fps)
-    private static final double VEL_HORIZONTAL = 56;    // m por tick
-    private static final double VEL_ALTITUD    = 56;    // m por tick
-    private static final int    ALTITUD_INICIAL = 1500; // metros
+    private static final int DELAY_MS = Config.MS_POR_TICK; // duración de cada tick (~33 fps)
 
     private final JFrame frame = new JFrame("Sky Defense");
     private final ControladorGameOver controladorGameOver = new ControladorGameOver();
+    private final ControladorTeclado teclado = new ControladorTeclado();
     private final Leaderboard leaderboard = new Leaderboard();
 
     private Juego      juego;
     private PanelJuego panelJuego;
     private Timer      timer;
     private String     nombreJugador = "Anónimo";
-
-    private boolean izquierda, derecha, arriba, abajo;
 
     // Arma la ventana principal y muestra el menú inicial.
     public void iniciar() {
@@ -76,18 +70,18 @@ public class ControladorJuego extends KeyAdapter {
 
     // Crea una partida nueva (modelo, vista y bucle de juego) y la arranca.
     private void nuevaPartida() {
-        izquierda = derecha = arriba = abajo = false;
+        teclado.reiniciar();
 
-        Avion avion         = new Avion((float) (Config.ANCHO_M / 2), ALTITUD_INICIAL, 100);
-        Jugador jugador     = new Jugador(nombreJugador, 3, avion);
+        Avion avion         = new Avion((float) (Config.ANCHO_M / 2), (float) Config.ALTITUD_INICIAL);
+        Jugador jugador     = new Jugador(nombreJugador, Config.VIDAS_INICIALES, avion);
         Nivel nivel         = new Nivel(1, 1.0);
-        Escuadron escuadron = new Escuadron(1, Juego.TAM_ESCUADRON);
+        Escuadron escuadron = new Escuadron(Juego.TAM_ESCUADRON);
 
         juego = new Juego(jugador, nivel, escuadron);
         juego.iniciarJuego();
 
         panelJuego = new PanelJuego(juego);
-        panelJuego.addKeyListener(this);
+        panelJuego.addKeyListener(teclado);
         mostrar(panelJuego);
 
         detenerTimer();
@@ -110,19 +104,19 @@ public class ControladorJuego extends KeyAdapter {
         }
     }
 
-    // Mueve la nave según las teclas presionadas, sin salirse de los límites.
+    // Mueve la nave según las teclas activas, sin salirse de los límites.
     private void moverAvion() {
         Avion avion = juego.getJugadorActual().getAvionActivo();
         float x   = avion.getPosicionX();   // horizontal (m)
         float alt = avion.getPosicionY();   // altitud (m)
 
-        if (izquierda && x > 0)                  avion.desplazarLateral((int) -VEL_HORIZONTAL);
-        if (derecha   && x < Config.ANCHO_M)     avion.desplazarLateral((int)  VEL_HORIZONTAL);
+        if (teclado.izquierda() && x > 0)              avion.desplazarLateral((int) -Config.VEL_HORIZONTAL);
+        if (teclado.derecha()   && x < Config.ANCHO_M) avion.desplazarLateral((int)  Config.VEL_HORIZONTAL);
         // "Arriba" sube la altitud; "abajo" la baja, dentro del rango permitido.
-        if (arriba    && alt < Config.ALTITUD_MAX)
-            avion.variarAltitud((int) Math.min(Config.ALTITUD_MAX, alt + VEL_ALTITUD));
-        if (abajo     && alt > Config.ALTITUD_MIN)
-            avion.variarAltitud((int) Math.max(Config.ALTITUD_MIN, alt - VEL_ALTITUD));
+        if (teclado.arriba()    && alt < Config.ALTITUD_MAX)
+            avion.variarAltitud((int) Math.min(Config.ALTITUD_MAX, alt + Config.VEL_ALTITUD));
+        if (teclado.abajo()     && alt > Config.ALTITUD_MIN)
+            avion.variarAltitud((int) Math.max(Config.ALTITUD_MIN, alt - Config.VEL_ALTITUD));
     }
 
     // Muestra la pantalla de fin de partida (derrota o victoria) con el puntaje obtenido.
@@ -149,30 +143,5 @@ public class ControladorJuego extends KeyAdapter {
         frame.revalidate();
         frame.repaint();
         componente.requestFocusInWindow();
-    }
-
-    // --- Entrada de teclado ---
-
-    // Se llama al apretar una tecla: la marca como presionada.
-    @Override
-    public void keyPressed(KeyEvent e) {
-        actualizarTecla(e.getKeyCode(), true);
-    }
-
-    // Se llama al soltar una tecla: la marca como no presionada.
-    @Override
-    public void keyReleased(KeyEvent e) {
-        actualizarTecla(e.getKeyCode(), false);
-    }
-
-    // Activa o desactiva la dirección de movimiento según la tecla.
-    private void actualizarTecla(int codigo, boolean presionada) {
-        switch (codigo) {
-            case KeyEvent.VK_LEFT:  case KeyEvent.VK_A: izquierda = presionada; break;
-            case KeyEvent.VK_RIGHT: case KeyEvent.VK_D: derecha   = presionada; break;
-            case KeyEvent.VK_UP:    case KeyEvent.VK_W: arriba    = presionada; break;
-            case KeyEvent.VK_DOWN:  case KeyEvent.VK_S: abajo     = presionada; break;
-            default: /* otras teclas se ignoran */ break;
-        }
     }
 }
